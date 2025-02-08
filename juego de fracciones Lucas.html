@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Juego de Fracciones</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { background-color: #f3f4f6; text-align: center; font-family: Arial, sans-serif; }
+    </style>
+</head>
+<body class="flex flex-col items-center justify-center min-h-screen">
+    <div class="bg-white p-6 rounded-lg shadow-lg w-80">
+        <h1 class="text-xl font-bold mb-4">🎲 Practica con Fracciones ⚽🎮</h1>
+        <p id="question" class="text-lg mb-2"></p>
+        <input type="text" id="answer" class="border rounded p-2 w-full" placeholder="Escribe tu respuesta en formato a/b">
+        <button onclick="checkAnswer()" class="bg-blue-500 text-white px-4 py-2 rounded mt-2">Verificar</button>
+        <p id="feedback" class="mt-4 font-bold"></p>
+        <button id="next" class="bg-green-500 text-white px-4 py-2 rounded mt-2 hidden" onclick="setNewQuestion()">Siguiente</button>
+        <p id="score" class="mt-2 text-gray-700"></p>
+    </div>
+    <script>
+        let score = { aciertos: 0, errores: 0 };
+        let previousQuestions = new Set();
+        
+        function getRandomInt(min, max) {
+            return Math.floor(Math.random() * (max - min + 1)) + min;
+        }
+
+        function generateFraction() {
+            let numerator = getRandomInt(1, 20);
+            let denominator = getRandomInt(2, 10);
+            return `${numerator}/${denominator}`;
+        }
+
+        function generateQuestion() {
+            let operations = ["+", "-", "×", "÷", "equivalente"];
+            let operation = operations[getRandomInt(0, operations.length - 1)];
+            let fraction1 = generateFraction();
+            let fraction2 = generateFraction();
+            let question;
+            
+            if (operation === "equivalente") {
+                let factor = getRandomInt(2, 5);
+                let [num, den] = fraction1.split("/").map(Number);
+                fraction2 = `${num * factor}/${den * factor}`;
+                question = `¿${fraction2} es equivalente a?`;
+            } else {
+                question = `${fraction1} ${operation} ${fraction2} = ?`;
+            }
+            
+            if (previousQuestions.has(question)) {
+                return generateQuestion();
+            }
+            previousQuestions.add(question);
+            return question;
+        }
+
+        function setNewQuestion() {
+            document.getElementById("feedback").textContent = "";
+            document.getElementById("answer").value = "";
+            document.getElementById("question").textContent = generateQuestion();
+            document.getElementById("next").classList.add("hidden");
+        }
+
+        function checkAnswer() {
+            let userAnswer = document.getElementById("answer").value.trim();
+            let question = document.getElementById("question").textContent;
+            let correctAnswer;
+            
+            try {
+                if (question.includes("equivalente")) {
+                    correctAnswer = question.split(" ")[1];
+                } else {
+                    let [frac1, op, frac2] = question.split(" ");
+                    let [num1, den1] = frac1.split("/").map(Number);
+                    let [num2, den2] = frac2.split("/").map(Number);
+                    
+                    switch (op) {
+                        case "+": correctAnswer = `${num1 + num2}/${den1}`; break;
+                        case "-": correctAnswer = `${num1 - num2}/${den1}`; break;
+                        case "×": correctAnswer = `${num1 * num2}/${den1 * den2}`; break;
+                        case "÷": correctAnswer = `${num1 * den2}/${den1 * num2}`; break;
+                    }
+                }
+                
+                if (userAnswer === correctAnswer) {
+                    document.getElementById("feedback").textContent = "✅ ¡Correcto!";
+                    score.aciertos++;
+                } else {
+                    document.getElementById("feedback").textContent = `❌ Incorrecto. La respuesta es ${correctAnswer}`;
+                    score.errores++;
+                }
+                document.getElementById("score").textContent = `Aciertos: ${score.aciertos} | Errores: ${score.errores}`;
+                document.getElementById("next").classList.remove("hidden");
+            } catch (e) {
+                document.getElementById("feedback").textContent = "❌ Hubo un error al evaluar la respuesta.";
+            }
+        }
+
+        setNewQuestion();
+    </script>
+</body>
+</html>
